@@ -39,6 +39,9 @@ def write_game(f: TextIOWrapper, moby_game, game: ListGame):
     if moby_game["cover"]:
         image_path = downloader.fetch_image(moby_game["cover"])
     desc = moby_game["description"] if moby_game["description"] else ""
+    title = moby_game["title"]
+    if game.notes:
+        title += f" - {game.notes}"
     f.write('        <div class="game">\n')
     if image_path:
         f.write(
@@ -46,7 +49,7 @@ def write_game(f: TextIOWrapper, moby_game, game: ListGame):
         )
     else:
         f.write('          <div class="fakeimage">?</div>\n')
-    f.write(f"          <h2>{moby_game['title']}</h2>\n")
+    f.write(f"          <h2>{title}</h2>\n")
     if game.votes:
         f.write(
             f"          <p class=\"votes\">Suggested by {game.attribution} on {game.date_suggested} <span class=\"votesreal\">({game.votes} vote{'' if game.votes == 1 else 's'})</span></p>"
@@ -54,6 +57,10 @@ def write_game(f: TextIOWrapper, moby_game, game: ListGame):
         pass
     else:
         f.write('          <p class="votes">Streamer chosen</p>')
+    if game.completed:
+        f.write(
+            f"          <p class=\"votes\">Completed on {game.completed}</p>\n"
+        )
     f.write(f'          <div class="description">{desc}</div>')
     f.write("        </div>\n")
 
