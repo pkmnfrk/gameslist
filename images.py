@@ -4,7 +4,7 @@ import urllib.parse
 import requests
 
 
-class ImageDownloader():
+class ImageDownloader:
     def __init__(self, folder: str):
         self.folder = folder
         self.relative_path = os.path.relpath(folder, os.path.curdir)
@@ -12,7 +12,6 @@ class ImageDownloader():
         if not os.path.exists(self.relative_path):
             os.mkdir(self.relative_path)
 
-    
     def fetch_image(self, url):
         parsed = urllib.parse.urlparse(url)
 
@@ -28,5 +27,3 @@ class ImageDownloader():
                     f.write(chunk)
 
         return rel_path
-        
-        
