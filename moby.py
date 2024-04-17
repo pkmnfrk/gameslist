@@ -17,7 +17,7 @@ class MobyGames:
             raise Exception("No Moby API Key")
         self.last_call = 0
 
-    def get_game_for_title(self, title) -> List[Dict]:
+    def get_games_for_title(self, title) -> List[Dict]:
         arg = {
             "format": "normal",
             "title": title,
@@ -25,6 +25,14 @@ class MobyGames:
 
         results = self.make_api_call("GET", "/games", arg)
         return results["games"]
+
+    def get_game_for_id(self, id) -> List[Dict]:
+        arg = {
+            "format": "normal",
+        }
+
+        results = self.make_api_call("GET", f"/games/{id}", arg)
+        return results
 
     def make_api_call(self, method, url, args):
         now = time.time()
@@ -47,6 +55,6 @@ class MobyGames:
 
 if __name__ == "__main__":
     test = MobyGames()
-    games = test.get_game_for_title("Another World")
+    games = test.get_games_for_title("Another World")
     for t in games:
         print(t["game_id"], t["title"])

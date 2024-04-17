@@ -35,10 +35,14 @@ h2 {
 }
 
 .fakeimage {
+    background-color: black;
+    color: #fdf;
     width: 250px;
     height: 200px;
     font-size: 80px;
     text-align: center;
+    display: grid;
+    align-content: center;
 }
 
 .description {
