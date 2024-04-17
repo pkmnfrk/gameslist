@@ -1,0 +1,6 @@
+*.zip
+venv
+images
+__pycache__
+*.json
+*.html
