@@ -84,17 +84,20 @@ def main():
     """Shows basic usage of the Sheets API.
     Prints values from a sample spreadsheet.
     """
+
     # try relying on existing auth (for github actions)
-    creds = service_account.Credentials.from_service_account_info()
-    if not creds and os.getenv("GOOGLE_AUTH"):
-        # do not try and fall back, it won't work, just explode now
-        raise Exception("Unable to use google auth credentials")
+    token_path = os.getenv("GOOGLE_GHA_CREDS_PATH") or "token.json"
 
     # The file token.json stores the user's access and refresh tokens, and is
     # created automatically when the authorization flow completes for the first
     # time.
-    if not creds and os.path.exists("token.json"):
-        creds = Credentials.from_authorized_user_file("token.json", SCOPES)
+    if os.path.exists(token_path):
+        creds = Credentials.from_authorized_user_file(token_path, SCOPES)
+
+    if not creds and os.getenv("GOOGLE_AUTH"):
+        # do not try and fall back, it won't work, just explode now
+        raise Exception("Unable to use google auth credentials")
+
     # If there are no (valid) credentials available, let the user log in.
     if not creds or not creds.valid:
         if creds and creds.expired and creds.refresh_token:
