@@ -4,15 +4,15 @@ on:
 permissions:
   contents: read
   id-token: 'write'
-  
+
 concurrency:
   group: '${{ github.workflow }} @ ${{ github.event.pull_request.head.label || github.head_ref || github.ref }}'
   cancel-in-progress: true
 
 env:
-  SPREADSHEET_ID: '$SPREADSHEET_ID'
-  SPREADSHEET_NAME: '$SPREADSHEET_NAME'
-  SPREADSHEET_RANGE: '$SPREADSHEET_RANGE'
+  SPREADSHEET_ID: '${{ vars.SPREADSHEET_ID }}'
+  SPREADSHEET_NAME: '${{ vars.SPREADSHEET_NAME }}'
+  SPREADSHEET_RANGE: '${{ vars.SPREADSHEET_RANGE }}'
   MOBY_API_KEY: '${{ secrets.MOBY_API_KEY }}'
 
 jobs:
