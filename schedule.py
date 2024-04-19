@@ -3,6 +3,7 @@ from dotenv import load_dotenv
 from io import TextIOWrapper
 import os.path
 import os
+from datetime import datetime, UTC
 
 from typing import List
 from auth import get_creds
@@ -202,6 +203,9 @@ def main():
                 else:
                     completed_list.append(g)
 
+        now = datetime.now(UTC)
+        now_stamp = now.strftime('%b {}, %Y at {}:%M:%S').format(now.day, now.hour)
+
         with open("schedule.html", "w", encoding="utf-8") as f:
             f.writelines(
                 [
@@ -213,6 +217,7 @@ def main():
                     "  </head>\n",
                     "  <body>\n",
                     "    <h1>Upcoming Games</h1>\n",
+                    f"    <p>Last updated: {now_stamp} UTC</p>\n",
                     '    <div class="gamelist">\n',
                 ]
             )
