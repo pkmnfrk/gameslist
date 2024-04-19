@@ -3,7 +3,8 @@ on:
   - workflow_dispatch
 permissions:
   contents: read
-  id-token: 'write'
+  id-token: write
+  pages: write
 
 concurrency:
   group: '${{ github.workflow }} @ ${{ github.event.pull_request.head.label || github.head_ref || github.ref }}'
@@ -35,3 +36,15 @@ jobs:
           SPREADSHEET_ID: '${{ vars.SCHEDULE_SPREADSHEET_ID }}'
           SPREADSHEET_NAME: '${{ vars.SCHEDULE_SPREADSHEET_NAME }}'
           SPREADSHEET_RANGE: '${{ vars.SCHEDULE_SPREADSHEET_RANGE }}'
+      - name: Create deployment artifact
+        run: |
+          tar -czvf "$RUNNER_TEMP/artifact.tar.gz" *.html *.css images
+      - name: Upload deployment artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: github-pages
+          path: ${{ runner.temp }}/artifact.tar.gz
+          retention-days: 1
+          if-no-files-found: error
+      - name: Deploy to GitHub Pages
+        uses: actions/deploy-pages@v4
