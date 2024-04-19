@@ -10,9 +10,6 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  SPREADSHEET_ID: '${{ vars.SPREADSHEET_ID }}'
-  SPREADSHEET_NAME: '${{ vars.SPREADSHEET_NAME }}'
-  SPREADSHEET_RANGE: '${{ vars.SPREADSHEET_RANGE }}'
   MOBY_API_KEY: '${{ secrets.MOBY_API_KEY }}'
 
 jobs:
@@ -34,3 +31,7 @@ jobs:
           credentials_json: '${{ secrets.GOOGLE_AUTH }}'
       - name: Create schedule file
         run: python schedule.py
+        env:
+          SPREADSHEET_ID: '${{ vars.SCHEDULE_SPREADSHEET_ID }}'
+          SPREADSHEET_NAME: '${{ vars.SCHEDULE_SPREADSHEET_NAME }}'
+          SPREADSHEET_RANGE: '${{ vars.SCHEDULE_SPREADSHEET_RANGE }}'
