@@ -1,6 +1,8 @@
 name: Deploy games pages
 on:
   - workflow_dispatch
+  - schedule:
+      - cron: "20 */3 * * *"
 permissions:
   contents: read
   id-token: write
