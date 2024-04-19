@@ -38,6 +38,7 @@ jobs:
           SPREADSHEET_RANGE: '${{ vars.SCHEDULE_SPREADSHEET_RANGE }}'
       - name: Create deployment artifact
         run: |
+          chmod -R o+rX *.html *.css images
           tar -czvf "$RUNNER_TEMP/artifact.tar.gz" *.html *.css images
       - name: Upload deployment artifact
         uses: actions/upload-artifact@v4
