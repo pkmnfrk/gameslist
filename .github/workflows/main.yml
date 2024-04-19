@@ -30,11 +30,6 @@ jobs:
         uses: 'google-github-actions/auth@v2'
         with:
           credentials_json: '${{ secrets.GOOGLE_AUTH }}'
-      - name: Cache images
-        uses: actions/cache@v3
-        with:
-          path: images
-          key: 
       - name: Create schedule file
         run: python schedule.py
         env:
@@ -48,7 +43,7 @@ jobs:
             --dereference --hard-dereference --force-local \
             *.html *.css images
       - name: Upload deployment artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v3
         with:
           name: github-pages
           path: ${{ runner.temp }}/artifact.tar.gz
