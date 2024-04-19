@@ -1,3 +1,5 @@
+from dotenv import load_dotenv
+
 from io import TextIOWrapper
 import os.path
 import os
@@ -5,15 +7,18 @@ import os
 from typing import List
 
 from google.auth.transport.requests import Request
+from google.oauth2 import service_account
 from google.oauth2.credentials import Credentials
 from google_auth_oauthlib.flow import InstalledAppFlow
 from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
 
-from gametranslator import GameTranslator
+from moby import MobyGames
 from images import ImageDownloader
 
-translator = GameTranslator()
+load_dotenv()
+
+moby = MobyGames()
 downloader = ImageDownloader("images")
 
 
@@ -32,14 +37,18 @@ class ListGame:
         self.provider = None if len(row) <= 4 else row[4]
         self.notes = None if len(row) <= 5 else row[5]
         self.completed = None if len(row) <= 6 else row[6]
+        self.game_id = None if len(row) <= 7 else row[7]
+        self.override_id = None if len(row) <= 8 else row[8]
+        self.cover = "" if len(row) <= 9 else row[9]
+        self.description = "" if len(row) <= 10 else row[10]
 
 
-def write_game(f: TextIOWrapper, moby_game, game: ListGame):
+def write_game(f: TextIOWrapper, game: ListGame):
     image_path = None
-    if moby_game["cover"]:
-        image_path = downloader.fetch_image(moby_game["cover"])
-    desc = moby_game["description"] if moby_game["description"] else ""
-    title = moby_game["title"]
+    if game.cover:
+        image_path = downloader.fetch_image(game.cover)
+    desc = game.description if game.description else ""
+    title = game.title
     if game.notes:
         title += f" - {game.notes}"
     f.write('        <div class="game">\n')
@@ -58,33 +67,33 @@ def write_game(f: TextIOWrapper, moby_game, game: ListGame):
     else:
         f.write('          <p class="votes">Streamer chosen</p>')
     if game.completed:
-        f.write(
-            f"          <p class=\"votes\">Completed on {game.completed}</p>\n"
-        )
+        f.write(f'          <p class="votes">Completed on {game.completed}</p>\n')
     f.write(f'          <div class="description">{desc}</div>')
     f.write("        </div>\n")
 
 
 # If modifying these scopes, delete the file token.json.
-SCOPES = ["https://www.googleapis.com/auth/spreadsheets.readonly"]
+SCOPES = ["https://www.googleapis.com/auth/spreadsheets"]
 
-# The ID and range of a sample spreadsheet.
-SAMPLE_SPREADSHEET_ID = "1gNaQwGtPC2ioVR4AcSIzeGAGGOX-O-DU-jgioO2dN2M"
-SAMPLE_RANGE_NAME = "raw schedule!A:G"
+SPREADSHEET_ID = os.getenv("SPREADSHEET_ID")
+SPREADSHEET_NAME = os.getenv("SPREADSHEET_NAME")
+SPREADSHEET_RANGE = SPREADSHEET_NAME + "!" + os.getenv("SPREADSHEET_RANGE")
 
 
 def main():
     """Shows basic usage of the Sheets API.
     Prints values from a sample spreadsheet.
     """
+    # try relying on existing auth (for github actions)
+    creds = service_account.Credentials.from_service_account_info()
+    if not creds and os.getenv("GOOGLE_AUTH"):
+        # do not try and fall back, it won't work, just explode now
+        raise Exception("Unable to use google auth credentials")
 
-    translator.load()
-
-    creds = None
     # The file token.json stores the user's access and refresh tokens, and is
     # created automatically when the authorization flow completes for the first
     # time.
-    if os.path.exists("token.json"):
+    if not creds and os.path.exists("token.json"):
         creds = Credentials.from_authorized_user_file("token.json", SCOPES)
     # If there are no (valid) credentials available, let the user log in.
     if not creds or not creds.valid:
@@ -100,11 +109,11 @@ def main():
     try:
         service = build("sheets", "v4", credentials=creds)
 
-        # Call the Sheets API
+        # First fetch the current sheet values
         sheet = service.spreadsheets()
         result = (
             sheet.values()
-            .get(spreadsheetId=SAMPLE_SPREADSHEET_ID, range=SAMPLE_RANGE_NAME)
+            .get(spreadsheetId=SPREADSHEET_ID, range=SPREADSHEET_RANGE)
             .execute()
         )
         values = result.get("values", [])
@@ -112,6 +121,77 @@ def main():
         if not values:
             print("No data found.")
             return
+
+        # Next, we need to examine the data to see if it needs to be fixed up
+        updates = []
+        row_num = 1
+        for row in values[1:]:
+            row_num += 1
+            if not row[0]:
+                continue
+
+            if len(row) > 8 and row[7] != row[8]:
+                # Override id doesn't match detected id, so prepare to start over
+                row[7] = None
+                print(f"Row {row_num} is overridden")
+
+            if len(row) <= 7 or not row[7]:
+                # New addition to the list!
+                print(f"Row {row_num} is new")
+                game = None
+                if len(row) > 8 and row[8]:
+                    game = moby.get_game_for_id(row[8])
+
+                if not game:
+                    games = moby.get_games_for_title(row[0])
+                    for g in games:
+                        if g["title"].lower() == row[0].lower():
+                            game = g
+                            break
+
+                    if not game:
+                        game = games[0]
+
+                if not game:
+                    game = {
+                        "game_id": "unknown",
+                        "description": "",
+                        "title": row[0],
+                        "sample_cover": {"image": None},
+                    }
+
+                updates.append(
+                    {
+                        "range": f"{SPREADSHEET_NAME}!A{row_num}",
+                        "values": [[game["title"]]],
+                    }
+                )
+                updates.append(
+                    {
+                        "range": f"{SPREADSHEET_NAME}!H{row_num}",
+                        "values": [
+                            [
+                                game["game_id"],
+                                game["game_id"],
+                                game["sample_cover"]["image"],
+                                game["description"],
+                            ]
+                        ],
+                    }
+                )
+                # break
+
+        if updates:
+            print(f"Updating {len(updates)} chunks")
+            sheet.values().batchUpdate(
+                spreadsheetId=SPREADSHEET_ID,
+                body={"valueInputOption": "RAW", "data": updates},
+            ).execute()
+            values = None
+
+        if not values:
+            # if we made any updates, re-fetch the sheet data
+            values = result.get("values", [])
 
         values = list(ListGame(row) for row in values[1:] if row[0])
 
@@ -166,16 +246,14 @@ def main():
             )
 
             for game in final_list:
-                moby_game = translator.translate(game.title)
-                write_game(f, moby_game, game)
+                write_game(f, game)
             f.write("    </div>\n")
 
             if completed_list:
                 f.write("    <h1>Completed Games</h1>\n")
                 f.write('    <div class="gamelist">\n')
                 for game in completed_list:
-                    moby_game = translator.translate(game.title)
-                    write_game(f, moby_game, game)
+                    write_game(f, game)
 
                 f.write("    </div>\n")
 
@@ -183,8 +261,6 @@ def main():
 
     except HttpError as err:
         print(err)
-    finally:
-        translator.save()
 
 
 if __name__ == "__main__":

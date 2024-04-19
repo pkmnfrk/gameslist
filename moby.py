@@ -1,5 +1,5 @@
+import os
 import os.path
-import json
 import requests
 import time
 from typing import List, Dict
@@ -9,11 +9,8 @@ class MobyGames:
     base_url = "https://api.mobygames.com/v1"
 
     def __init__(self):
-        if os.path.exists("moby.json"):
-            with open("moby.json") as f:
-                obj = json.load(f)
-                self.api_key = obj["api_key"]
-        else:
+        self.api_key = os.getenv("MOBY_API_KEY")
+        if not self.api_key:
             raise Exception("No Moby API Key")
         self.last_call = 0
 

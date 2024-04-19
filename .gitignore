@@ -4,3 +4,5 @@ images
 __pycache__
 *.json
 *.html
+.env
+gha-creds-*.json
