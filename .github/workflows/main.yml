@@ -36,19 +36,18 @@ jobs:
           SPREADSHEET_ID: '${{ vars.SCHEDULE_SPREADSHEET_ID }}'
           SPREADSHEET_NAME: '${{ vars.SCHEDULE_SPREADSHEET_NAME }}'
           SPREADSHEET_RANGE: '${{ vars.SCHEDULE_SPREADSHEET_RANGE }}'
-      - name: Create deployment artifact
+      - name: Create deployment package
         run: |
-          chmod -R +rX *.html *.css images
-          ls -l *.html *.css images
+          mkdir site
+          mv *.html *.css images site/
+          chmod -R +rX site
+          ls -l site
           tar -czvf "$RUNNER_TEMP/artifact.tar.gz" \
             --dereference --hard-dereference --force-local \
             *.html *.css images
       - name: Upload deployment artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-pages-artifact@v3
         with:
-          name: github-pages
-          path: ${{ runner.temp }}/artifact.tar.gz
-          retention-days: 1
-          if-no-files-found: error
+          page: site
       - name: Deploy to GitHub Pages
         uses: actions/deploy-pages@v4
