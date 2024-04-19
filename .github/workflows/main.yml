@@ -44,7 +44,9 @@ jobs:
       - name: Create deployment artifact
         run: |
           chmod -R +rX *.html *.css images
-          tar -czvf "$RUNNER_TEMP/artifact.tar.gz" *.html *.css images
+          tar -czvf "$RUNNER_TEMP/artifact.tar.gz" \
+            --dereference --hard-dereference --force-local \
+            *.html *.css images
       - name: Upload deployment artifact
         uses: actions/upload-artifact@v4
         with:
