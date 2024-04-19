@@ -3,9 +3,16 @@ on:
   - workflow_dispatch
 permissions:
   contents: read
-concurrency:
+  concurrency:
   group: '${{ github.workflow }} @ ${{ github.event.pull_request.head.label || github.head_ref || github.ref }}'
   cancel-in-progress: true
+
+env:
+  SPREADSHEET_ID: '$SPREADSHEET_ID'
+  SPREADSHEET_NAME: '$SPREADSHEET_NAME'
+  SPREADSHEET_RANGE: '$variables.SPREADSHEET_RANGE'
+  MOBY_API_KEY: '${{ secrets.MOBY_API_KEY }}'
+
 jobs:
   deploy-schedule:
     runs-on: ubuntu-latest
