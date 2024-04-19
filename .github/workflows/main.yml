@@ -3,7 +3,7 @@ on:
   - workflow_dispatch
 permissions:
   contents: read
-  concurrency:
+concurrency:
   group: '${{ github.workflow }} @ ${{ github.event.pull_request.head.label || github.head_ref || github.ref }}'
   cancel-in-progress: true
 
