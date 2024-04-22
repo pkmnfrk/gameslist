@@ -10,4 +10,4 @@ IF NOT EXIST venv (
 )
 
 python schedule.py
-python keys.py
+@REM python keys.py

@@ -1,23 +1,41 @@
 body {
     font-family: sans-serif;
     font-size: 13px;
+
+    background: #333333;
+    background-image: url('background.jpg');
+    background-attachment: fixed;
+    background-size: cover;
+
+    color: #FFFFFF;
+}
+
+body > h1, body > p {
+    margin-left: 10px;
+    margin-right: 10px;
+}
+
+a {
+    color: #490077;
 }
 
 .gamelist {
-    /* display: grid;
-    grid-template-columns: repeat(8, 1fr); */
+    display: flex;
+    flex-wrap: wrap;
 }
 
 .game {
     display: inline-block;
     width: 250px;
-    height: 400px;
-    border: 1px solid black;
-    padding: 5px;
+    border: 3px solid #00e0a4;
+    border-radius: 5px;
     margin: 10px;
     overflow: hidden;
     text-overflow: ellipsis;
+    color: #333333;
+    background: #ffffff;
 }
+
 .realimage {
     width: 260px;
     height: 200px;
@@ -32,6 +50,12 @@ body {
 h2 {
     font-size: 18px;
     text-align: center;
+    margin: 0px 0px 4px 0px;
+    padding: 8px 0px;
+    color: #FFFFFF;
+    background: #490077;
+    border-bottom: 1px solid #111;
+    border-top: 1px solid #111;
 }
 
 .fakeimage {
@@ -46,15 +70,23 @@ h2 {
 }
 
 .description {
-    text-overflow: ellipsis;
+    max-height: 120px;
+    overflow: auto;
 }
 
 .description p {
     margin: 0;
+    padding: 6px;
 }
 
 .votes {
     text-align: center;
+    margin:0px; 
+    padding: 6px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid #111;
+    margin-bottom: 0px;
+    font-weight: bold;
 }
 
 .votes .votesreal {
