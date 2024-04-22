@@ -41,7 +41,7 @@ jobs:
       - name: Create deployment package
         run: |
           mkdir site
-          mv *.html *.css images site/
+          mv *.html *.css images site/ *.jpg
           chmod -R +rX site
       - name: Upload deployment artifact
         uses: actions/upload-pages-artifact@v3
