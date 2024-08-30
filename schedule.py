@@ -46,6 +46,8 @@ def write_game(f: TextIOWrapper, game: ListGame):
         image_path = downloader.fetch_image(game.cover)
     desc = game.description if game.description else ""
     title = game.title
+    provider = game.provider if game.provider else ""
+
     if game.notes:
         title += f" - {game.notes}"
     f.write('        <div class="game">\n')
@@ -56,15 +58,17 @@ def write_game(f: TextIOWrapper, game: ListGame):
     else:
         f.write('          <div class="fakeimage">?</div>\n')
     f.write(f"          <h2>{title}</h2>\n")
+    if game.completed:
+        f.write(f'          <div class="votes">Completed on {game.completed}</div>\n')
     if game.votes:
         f.write(
-            f"          <p class=\"votes\">Suggested by {game.attribution} on {game.date_suggested} <span class=\"votesreal\">({game.votes} vote{'' if game.votes == 1 else 's'})</span></p>"
+            f"          <div class=\"votes\">Suggested by {game.attribution} on {game.date_suggested} <span class=\"votesreal\">({game.votes} vote{'' if game.votes == 1 else 's'})</span></div>"
         )
         pass
     else:
-        f.write('          <p class="votes">Streamer chosen</p>')
-    if game.completed:
-        f.write(f'          <p class="votes">Completed on {game.completed}</p>\n')
+        f.write('          <div class="votes">Streamer chosen</div>')
+    if game.provider:
+        f.write(f'          <div class="provider">{provider}</div>')
     f.write(f'          <div class="description">{desc}</div>')
     f.write("        </div>\n")
 
