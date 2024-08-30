@@ -1,7 +1,10 @@
+from dotenv import load_dotenv
+
 from io import TextIOWrapper
 import os.path
 import os
 
+from typing import List
 from auth import get_creds
 from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
@@ -9,8 +12,10 @@ from googleapiclient.errors import HttpError
 from moby import MobyGames
 from images import ImageDownloader
 
-downloader = ImageDownloader("images")
+load_dotenv()
+
 moby = MobyGames()
+downloader = ImageDownloader("images")
 
 class ListGame:
     def __init__(self, row):
