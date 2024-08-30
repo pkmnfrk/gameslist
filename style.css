@@ -36,10 +36,13 @@ a {
     background: #ffffff;
 }
 
-.game a, .game b {
+.game a {
     color: #490077;
 }
 
+.game b {
+    color: #008864;
+}
 
 .realimage {
     width: 260px;
@@ -84,7 +87,7 @@ h2 {
     padding: 6px;
 }
 
-.votes, .provider {
+.votes, .provider, .platform, .keycount {
     text-align: center;
     margin:0px; 
     padding: 6px;
