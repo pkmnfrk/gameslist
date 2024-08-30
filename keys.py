@@ -141,6 +141,10 @@ def main():
             ).execute()
             values = None
 
+        if not values:
+            # if we made any updates, re-fetch the sheet data
+            values = result.get("values", [])
+
         values = list(ListGame(row) for row in values[1:] if row[0])
 
         values = list(
@@ -170,7 +174,7 @@ def main():
                 write_game(f, game)
             f.write("    </div>\n")
 
-            f.writelines(["  </body>\n", "</html>\n"])
+            f.writelines(["  <div>Data provided by <a target='_blank' href='https://www.mobygames.com/'>MobyGames</a></div></body>\n", "</html>\n"])
 
     except HttpError as err:
         print(err)
