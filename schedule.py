@@ -203,6 +203,8 @@ def main():
                     final_list.append(g)
                 else:
                     completed_list.append(g)
+        
+        completed_list.sort(key=lambda r: r.completed)
 
         now = datetime.now(UTC)
         now_stamp = now.strftime('%b {}, %Y at {}:%M:%S').format(now.day, now.hour)
