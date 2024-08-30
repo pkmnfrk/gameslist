@@ -117,13 +117,14 @@ def main():
 
                 if not game:
                     games = moby.get_games_for_title(row[0])
-                    for g in games:
-                        if g["title"].lower() == row[0].lower():
-                            game = g
-                            break
+                    if len(games) > 0:
+                        for g in games:
+                            if g["title"].lower() == row[0].lower():
+                                game = g
+                                break
 
-                    if not game:
-                        game = games[0]
+                        if not game:
+                            game = games[0]
 
                 if not game:
                     game = {
@@ -234,7 +235,7 @@ def main():
 
                 f.write("    </div>\n")
 
-            f.writelines(["  </body>\n", "</html>\n"])
+            f.writelines(["  <div>Data provided by <a target='_blank' href='https://www.mobygames.com/'>MobyGames</a></div></body>\n", "</html>\n"])
 
     except HttpError as err:
         print(err)
