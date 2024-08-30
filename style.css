@@ -16,7 +16,7 @@ body > h1, body > p {
 }
 
 a {
-    color: #490077;
+    color: #ffffff;
 }
 
 .gamelist {
@@ -34,6 +34,10 @@ a {
     text-overflow: ellipsis;
     color: #333333;
     background: #ffffff;
+}
+
+.game a {
+    color: #490077;
 }
 
 .realimage {
