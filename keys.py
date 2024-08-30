@@ -72,9 +72,7 @@ def main():
         if not values:
             print("No data found.")
             return
-
-        values = list(ListGame(row) for row in values[1:] if row[0])
-
+        
         # Next, we need to examine the data to see if it needs to be fixed up
         updates = []
         row_num = 1
@@ -142,6 +140,8 @@ def main():
                 body={"valueInputOption": "RAW", "data": updates},
             ).execute()
             values = None
+
+        values = list(ListGame(row) for row in values[1:] if row[0])
 
         values = list(
             sorted(
