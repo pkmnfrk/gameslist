@@ -83,7 +83,7 @@ h2 {
     padding: 6px;
 }
 
-.votes {
+.votes, .provider {
     text-align: center;
     margin:0px; 
     padding: 6px;
