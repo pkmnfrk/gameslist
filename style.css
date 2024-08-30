@@ -36,9 +36,10 @@ a {
     background: #ffffff;
 }
 
-.game a {
+.game a, .game b {
     color: #490077;
 }
+
 
 .realimage {
     width: 260px;

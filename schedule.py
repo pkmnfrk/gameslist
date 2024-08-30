@@ -32,7 +32,6 @@ class ListGame:
             self.date_suggested = row[2]
         self.attribution = None if len(row) <= 3 else row[3]
         self.provider = None if len(row) <= 4 else row[4]
-        self.notes = None if len(row) <= 5 else row[5]
         self.completed = None if len(row) <= 6 else row[6]
         self.game_id = None if len(row) <= 7 else row[7]
         self.override_id = None if len(row) <= 8 else row[8]
@@ -48,8 +47,6 @@ def write_game(f: TextIOWrapper, game: ListGame):
     title = game.title
     provider = game.provider if game.provider else ""
 
-    if game.notes:
-        title += f" - {game.notes}"
     f.write('        <div class="game">\n')
     if image_path:
         f.write(
@@ -59,16 +56,16 @@ def write_game(f: TextIOWrapper, game: ListGame):
         f.write('          <div class="fakeimage">?</div>\n')
     f.write(f"          <h2>{title}</h2>\n")
     if game.completed:
-        f.write(f'          <div class="votes">Completed on {game.completed}</div>\n')
+        f.write(f'          <div class="votes"><b>Completed:</b> {game.completed}</div>\n')
     if game.votes:
         f.write(
-            f"          <div class=\"votes\">Suggested by {game.attribution} on {game.date_suggested} <span class=\"votesreal\">({game.votes} vote{'' if game.votes == 1 else 's'})</span></div>"
+            f"          <div class=\"votes\"><b>Suggested by:</b> {game.attribution} on {game.date_suggested} <span class=\"votesreal\">({game.votes} vote{'' if game.votes == 1 else 's'})</span></div>"
         )
         pass
     else:
         f.write('          <div class="votes">Streamer chosen</div>')
     if game.provider:
-        f.write(f'          <div class="provider">Provider: {provider}</div>')
+        f.write(f'          <div class="provider"><b>Provider:</b> {provider}</div>')
     f.write(f'          <div class="description">{desc}</div>')
     f.write("        </div>\n")
 

@@ -6,24 +6,28 @@ from auth import get_creds
 from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
 
-from gametranslator import GameTranslator
+from moby import MobyGames
 from images import ImageDownloader
 
-translator = GameTranslator()
 downloader = ImageDownloader("images")
-
+moby = MobyGames()
 
 class ListGame:
     def __init__(self, row):
         self.title = str(row[0])
         self.platform = str(row[1])
+        self.count = str(row[2])
+        self.game_id = None if len(row) <= 6 else row[6]
+        self.override_id = None if len(row) <= 7 else row[7]
+        self.cover = "" if len(row) <= 8 else row[8]
+        self.description = "" if len(row) <= 9 else row[9]
 
-
-def write_game(f: TextIOWrapper, moby_game, game: ListGame):
+def write_game(f: TextIOWrapper, game: ListGame):
     image_path = None
-    if moby_game["cover"]:
-        image_path = downloader.fetch_image(moby_game["cover"])
-    desc = moby_game["description"] if moby_game["description"] else ""
+    if game.cover:
+        image_path = downloader.fetch_image(game.cover)
+    desc = game.description if game.description else ""
+
     f.write('        <div class="game">\n')
     if image_path:
         f.write(
@@ -31,32 +35,31 @@ def write_game(f: TextIOWrapper, moby_game, game: ListGame):
         )
     else:
         f.write('          <div class="fakeimage">?</div>\n')
-    f.write(f"          <h2>{moby_game['title']}</h2>\n")
-    f.write(f"          <p>Platform: {game.platform}</p>\n")
+    f.write(f"          <h2>{game.title}</h2>\n")
+    f.write(f'          <div class="platform"><b>Platform:</b> {game.platform}</div>\n')
+    f.write(f'          <div class="keycount"><b># of keys:</b> {game.count}</div>\n')
     f.write(f'          <div class="description">{desc}</div>')
     f.write("        </div>\n")
 
 
 # The ID and range of a sample spreadsheet.
-SAMPLE_SPREADSHEET_ID = "1YKfxIgEyYlPkm0lvzk5wCMz3Kh6X6PK3GbrWGWHD0sA"
-SAMPLE_RANGE_NAME = "GAMES!A:B"
-
+SPREADSHEET_ID = os.getenv("SPREADSHEET_ID")
+SPREADSHEET_NAME = os.getenv("SPREADSHEET_NAME")
+SPREADSHEET_RANGE = SPREADSHEET_NAME + "!" + os.getenv("SPREADSHEET_RANGE")
 
 def main():
     """Shows basic usage of the Sheets API.
     Prints values from a sample spreadsheet.
     """
 
-    translator.load()
-
     try:
         service = build("sheets", "v4", credentials=get_creds())
 
-        # Call the Sheets API
+        # First fetch the current sheet values
         sheet = service.spreadsheets()
         result = (
             sheet.values()
-            .get(spreadsheetId=SAMPLE_SPREADSHEET_ID, range=SAMPLE_RANGE_NAME)
+            .get(spreadsheetId=SPREADSHEET_ID, range=SPREADSHEET_RANGE)
             .execute()
         )
         values = result.get("values", [])
@@ -66,6 +69,74 @@ def main():
             return
 
         values = list(ListGame(row) for row in values[1:] if row[0])
+
+        # Next, we need to examine the data to see if it needs to be fixed up
+        updates = []
+        row_num = 1
+        for row in values[1:]:
+            row_num += 1
+            if not row[0]:
+                continue
+
+            if len(row) > 5 and row[5] != row[6]:
+                # Override id doesn't match detected id, so prepare to start over
+                row[5] = None
+                print(f"Row {row_num} is overridden")
+
+            if len(row) <= 5 or not row[5]:
+                # New addition to the list!
+                print(f"Row {row_num} is new")
+                game = None
+                if len(row) > 6 and row[6]:
+                    game = moby.get_game_for_id(row[6])
+
+                if not game:
+                    games = moby.get_games_for_title(row[0])
+                    if len(games) > 0:
+                        for g in games:
+                            if g["title"].lower() == row[0].lower():
+                                game = g
+                                break
+
+                        if not game:
+                            game = games[0]
+
+                if not game:
+                    game = {
+                        "game_id": "unknown",
+                        "description": "",
+                        "title": row[0],
+                        "sample_cover": {"image": None},
+                    }
+
+                updates.append(
+                    {
+                        "range": f"{SPREADSHEET_NAME}!A{row_num}",
+                        "values": [[game["title"]]],
+                    }
+                )
+                updates.append(
+                    {
+                        "range": f"{SPREADSHEET_NAME}!F{row_num}",
+                        "values": [
+                            [
+                                game["game_id"],
+                                game["game_id"],
+                                game["sample_cover"]["image"],
+                                game["description"],
+                            ]
+                        ],
+                    }
+                )
+                # break
+
+        if updates:
+            print(f"Updating {len(updates)} chunks")
+            sheet.values().batchUpdate(
+                spreadsheetId=SPREADSHEET_ID,
+                body={"valueInputOption": "RAW", "data": updates},
+            ).execute()
+            values = None
 
         values = list(
             sorted(
@@ -80,27 +151,24 @@ def main():
                     "<!doctype html>\n",
                     "<html>\n",
                     "  <head>\n",
-                    "    <title>Available Keys for Redemption</title>\n",
+                    "    <title>Free games via points redemption!</title>\n",
                     '    <link rel="stylesheet" href="style.css"></link>\n',
                     "  </head>\n",
                     "  <body>\n",
                     "    <h1>Available Keys</h1>\n",
-                    '    <p>If you want a game key, all you have to do is come by a stream (<a href="https://twitch.tv/cdutson">https://twitch.tv/cdutson</a>) and spend some channel points!</p>\n'
+                    '    <p>If you want a game key, all you have to do is come by a stream (<a href="https://twitch.tv/cdutson">https://twitch.tv/cdutson</a>) and redeem a free game using channel points!</p>\n'
                     '    <div class="gamelist">\n',
                 ]
             )
 
             for game in values:
-                moby_game = translator.translate(game.title)
-                write_game(f, moby_game, game)
+                write_game(f, game)
             f.write("    </div>\n")
 
             f.writelines(["  </body>\n", "</html>\n"])
 
     except HttpError as err:
         print(err)
-    finally:
-        translator.save()
 
 
 if __name__ == "__main__":
