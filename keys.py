@@ -23,6 +23,7 @@ class ListGame:
         self.title = str(row[0])
         self.platform = str(row[1])
         self.count = str(row[2])
+        self.notes = None if len(row) <= 4 else row[4]
         self.game_id = None if len(row) <= 5 else row[5]
         self.override_id = None if len(row) <= 6 else row[6]
         self.cover = "" if len(row) <= 7 else row[7]
@@ -33,6 +34,7 @@ def write_game(f: TextIOWrapper, game: ListGame):
     if game.cover:
         image_path = downloader.fetch_image(game.cover)
     desc = game.description if game.description else ""
+    notes = f' - {game.notes}' if game.notes else ""
 
     f.write('        <div class="game">\n')
     if image_path:
@@ -41,7 +43,7 @@ def write_game(f: TextIOWrapper, game: ListGame):
         )
     else:
         f.write('          <div class="fakeimage">?</div>\n')
-    f.write(f"          <h2>{game.title}</h2>\n")
+    f.write(f"          <h2>{game.title}{notes}</h2>\n")
     f.write(f'          <div class="platform"><b>Platform:</b> {game.platform}</div>\n')
     f.write(f'          <div class="keycount"><b># of keys:</b> {game.count}</div>\n')
     f.write(f'          <div class="description">{desc}</div>')
