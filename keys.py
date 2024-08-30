@@ -22,10 +22,10 @@ class ListGame:
         self.title = str(row[0])
         self.platform = str(row[1])
         self.count = str(row[2])
-        self.game_id = None if len(row) <= 6 else row[6]
-        self.override_id = None if len(row) <= 7 else row[7]
-        self.cover = "" if len(row) <= 8 else row[8]
-        self.description = "" if len(row) <= 9 else row[9]
+        self.game_id = None if len(row) <= 5 else row[5]
+        self.override_id = None if len(row) <= 6 else row[6]
+        self.cover = "" if len(row) <= 7 else row[7]
+        self.description = "" if len(row) <= 8 else row[8]
 
 def write_game(f: TextIOWrapper, game: ListGame):
     image_path = None
