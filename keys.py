@@ -3,6 +3,7 @@ from dotenv import load_dotenv
 from io import TextIOWrapper
 import os.path
 import os
+from datetime import datetime, UTC
 
 from typing import List
 from auth import get_creds
@@ -45,7 +46,6 @@ def write_game(f: TextIOWrapper, game: ListGame):
     f.write(f'          <div class="keycount"><b># of keys:</b> {game.count}</div>\n')
     f.write(f'          <div class="description">{desc}</div>')
     f.write("        </div>\n")
-
 
 # The ID and range of a sample spreadsheet.
 SPREADSHEET_ID = os.getenv("SPREADSHEET_ID")
@@ -154,6 +154,9 @@ def main():
             )
         )
 
+        now = datetime.now(UTC)
+        now_stamp = now.strftime('%b {}, %Y at {}:%M:%S').format(now.day, now.hour)
+
         with open("keys.html", "w", encoding="utf-8") as f:
             f.writelines(
                 [
@@ -165,6 +168,7 @@ def main():
                     "  </head>\n",
                     "  <body>\n",
                     "    <h1>Available Keys</h1>\n",
+                    f"    <p>Last updated: {now_stamp} UTC</p>\n",
                     '    <p>If you want a game key, all you have to do is come by a stream (<a href="https://twitch.tv/cdutson">https://twitch.tv/cdutson</a>) and redeem a free game using channel points!</p>\n'
                     '    <div class="gamelist">\n',
                 ]
