@@ -22,22 +22,24 @@ downloader = ImageDownloader("images")
 class ListGame:
     def __init__(self, row):
         self.title = row[0]
-        if len(row) <= 1 or int(row[1]) > 1000:
-            self.votes = None
-        else:
-            self.votes = int(row[1])
-        if len(row) <= 2 or not row[2]:
+        self.streamer_selected = row[1]
+        self.votes = None if len(row) <= 2 else int(row[2])
+        if len(row) <= 3 or not row[3]:
             self.date_suggested = "2000-01-01"
         else:
-            self.date_suggested = row[2]
-        self.attribution = None if len(row) <= 3 else row[3]
-        self.provider = None if len(row) <= 4 else row[4]
-        self.completed = None if len(row) <= 6 else row[6]
-        self.game_id = None if len(row) <= 7 else row[7]
-        self.override_id = None if len(row) <= 8 else row[8]
-        self.cover = "" if len(row) <= 9 else row[9]
-        self.description = "" if len(row) <= 10 else row[10]
+            self.date_suggested = row[3]
+        self.attribution = None if len(row) <= 4 else row[4]
+        self.provider = None if len(row) <= 5 else row[5]
+        self.notes = None if len(row) <= 6 else row[6]
+        self.started = None if len(row) <= 7 else row[7]
+        self.completed = None if len(row) <= 8 else row[8]
+        self.game_id = None if len(row) <= 9 else row[9]
+        self.override_id = None if len(row) <= 10 else row[10]
+        self.cover = "" if len(row) <= 11 else row[11]
+        self.description = "" if len(row) <= 12 else row[12]
 
+    def __repr__(self):
+        return f"{self.title} - {self.votes} - {self.streamer_selected}"
 
 def write_game(f: TextIOWrapper, game: ListGame):
     image_path = None
@@ -54,10 +56,12 @@ def write_game(f: TextIOWrapper, game: ListGame):
         )
     else:
         f.write('          <div class="fakeimage">?</div>\n')
-    f.write(f"          <h2>{title}</h2>\n")
+    f.write(f"          <h3>{title}</h3>\n")
+    if game.started and not game.completed:
+        f.write(f'          <div class="votes"><b>Started:</b> {game.started}</div>\n')
     if game.completed:
         f.write(f'          <div class="votes"><b>Completed:</b> {game.completed}</div>\n')
-    if game.votes:
+    if not game.streamer_selected and game.votes:
         f.write(
             f"          <div class=\"votes\"><b>Suggested by:</b> {game.attribution} on {game.date_suggested} <span class=\"votesreal\">({game.votes} vote{'' if game.votes == 1 else 's'})</span></div>"
         )
@@ -70,10 +74,19 @@ def write_game(f: TextIOWrapper, game: ListGame):
     f.write("        </div>\n")
 
 
+def write_list(f:TextIOWrapper, game_list: List[ListGame], title: str):
+    f.write(f"    <h2>{title}</h2>\n")
+    f.write('    <div class="gamelist">\n')
+    for game in game_list:
+        write_game(f, game)
+    f.write("    </div>\n")
+
+
 SPREADSHEET_ID = os.getenv("SPREADSHEET_ID")
 SPREADSHEET_NAME = os.getenv("SPREADSHEET_NAME")
 SPREADSHEET_RANGE = SPREADSHEET_NAME + "!" + os.getenv("SPREADSHEET_RANGE")
 
+print(SPREADSHEET_RANGE)
 
 def main():
     """Shows basic usage of the Sheets API.
@@ -91,7 +104,6 @@ def main():
             .execute()
         )
         values = result.get("values", [])
-
         if not values:
             print("No data found.")
             return
@@ -104,17 +116,17 @@ def main():
             if not row[0]:
                 continue
 
-            if len(row) > 8 and row[7] != row[8]:
+            if len(row) > 10 and row[9] != row[10]:
                 # Override id doesn't match detected id, so prepare to start over
-                row[7] = None
+                row[9] = None
                 print(f"Row {row_num} is overridden")
 
-            if len(row) <= 7 or not row[7]:
+            if len(row) <= 9 or not row[9]:
                 # New addition to the list!
                 print(f"Row {row_num} is new")
                 game = None
-                if len(row) > 8 and row[8]:
-                    game = moby.get_game_for_id(row[8])
+                if len(row) > 10 and row[10]:
+                    game = moby.get_game_for_id(row[10])
 
                 if not game:
                     games = moby.get_games_for_title(row[0])
@@ -143,7 +155,7 @@ def main():
                 )
                 updates.append(
                     {
-                        "range": f"{SPREADSHEET_NAME}!H{row_num}",
+                        "range": f"{SPREADSHEET_NAME}!J{row_num}",
                         "values": [
                             [
                                 game["game_id"],
@@ -174,37 +186,43 @@ def main():
             sorted(
                 values,
                 key=lambda g: (
-                    (10000 - g.votes) if g.votes else 999999,
+                    -abs(g.votes),
                     g.date_suggested,
                 ),
             )
         )
 
         # sort the data
-        god_chosen = list(g for g in values if not g.votes)
-        pleb_chosen = list(g for g in values if g.votes)
+        god_chosen = list(g for g in values if g.streamer_selected)
+        pleb_chosen = list(g for g in values if not g.streamer_selected)
 
         final_list: List[ListGame] = list()
         completed_list: List[ListGame] = list()
+        current_list: List[ListGame] = list()
 
         while god_chosen or pleb_chosen:
             # first pull an item from god list
             if god_chosen:
                 g = god_chosen.pop(0)
                 # but only if not completed
-                if not g.completed:
-                    final_list.append(g)
-                else:
+                if g.started and not g.completed:
+                    current_list.append(g)
+                elif g.completed:
                     completed_list.append(g)
+                else:
+                    final_list.append(g)
 
             # same thing, but pleb
             if pleb_chosen:
                 g = pleb_chosen.pop(0)
-                if not g.completed:
-                    final_list.append(g)
-                else:
+                if g.started and not g.completed:
+                    current_list.append(g)
+                elif g.completed:
                     completed_list.append(g)
+                else:
+                    final_list.append(g)
         
+        current_list.sort(key=lambda r: r.started)
         completed_list.sort(key=lambda r: r.completed)
 
         now = datetime.now(UTC)
@@ -220,25 +238,20 @@ def main():
                     '    <link rel="stylesheet" href="style.css"></link>\n',
                     "  </head>\n",
                     "  <body>\n",
-                    "    <h1>Upcoming Games</h1>\n",
+                    "     <h1>Games list</h1>\n",
                     f"    <p>Last updated: {now_stamp} UTC</p>\n",
-                    '    <div class="gamelist">\n',
-                ]
-            )
+                    "     <p>Here's a list of all the voted games in the schedule.</p>\n"])
+            
+            if current_list:
+                write_list(f, current_list, "Current Games")
 
-            for game in final_list:
-                write_game(f, game)
-            f.write("    </div>\n")
+            write_list(f, final_list, "Upcoming Games")
 
             if completed_list:
-                f.write("    <h1>Completed Games</h1>\n")
-                f.write('    <div class="gamelist">\n')
-                for game in completed_list:
-                    write_game(f, game)
+                write_list(f, completed_list, "Completed Games")
 
-                f.write("    </div>\n")
 
-            f.writelines(["  <div>Data provided by <a target='_blank' href='https://www.mobygames.com/'>MobyGames</a></div></body>\n", "</html>\n"])
+            f.writelines(["  <footer><p>Data provided by <a target='_blank' href='https://www.mobygames.com/'>MobyGames</a></p></footer></body>\n", "</html>\n"])
 
     except HttpError as err:
         print(err)

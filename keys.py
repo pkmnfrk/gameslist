@@ -43,7 +43,7 @@ def write_game(f: TextIOWrapper, game: ListGame):
         )
     else:
         f.write('          <div class="fakeimage">?</div>\n')
-    f.write(f"          <h2>{game.title}{notes}</h2>\n")
+    f.write(f"          <h3>{game.title}{notes}</h3>\n")
     f.write(f'          <div class="platform"><b>Platform:</b> {game.platform}</div>\n')
     f.write(f'          <div class="keycount"><b># of keys:</b> {game.count}</div>\n')
     f.write(f'          <div class="description">{desc}</div>')
@@ -180,7 +180,7 @@ def main():
                 write_game(f, game)
             f.write("    </div>\n")
 
-            f.writelines(["  <div>Data provided by <a target='_blank' href='https://www.mobygames.com/'>MobyGames</a></div></body>\n", "</html>\n"])
+            f.writelines(["  <footer><p>Data provided by <a target='_blank' href='https://www.mobygames.com/'>MobyGames</a></p></footer></body>\n", "</html>\n"])
 
     except HttpError as err:
         print(err)

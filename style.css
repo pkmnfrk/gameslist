@@ -8,12 +8,11 @@ body {
     background-size: cover;
 
     color: #FFFFFF;
+
+    padding: 0px 10px;
 }
 
-body > h1, body > p {
-    margin-left: 10px;
-    margin-right: 10px;
-}
+h2 {margin-bottom: 5px;}
 
 a {
     color: #ffffff;
@@ -55,7 +54,7 @@ a {
     margin-top: -5px;
 }
 
-h2 {
+h3 {
     font-size: 18px;
     text-align: center;
     margin: 0px 0px 4px 0px;
