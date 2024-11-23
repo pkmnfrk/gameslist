@@ -221,9 +221,10 @@ def main():
                     completed_list.append(g)
                 else:
                     final_list.append(g)
-        
+
         current_list.sort(key=lambda r: r.started)
         completed_list.sort(key=lambda r: r.completed)
+        final_list.sort(key=lambda r: (-r.votes))
 
         now = datetime.now(UTC)
         now_stamp = now.strftime('%b {}, %Y at {}:%M:%S').format(now.day, now.hour)
