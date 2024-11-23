@@ -9,5 +9,4 @@ IF NOT EXIST venv (
     call venv\scripts\activate
 )
 
-python schedule.py
-python keys.py
+python schedule.py && python keys.py
